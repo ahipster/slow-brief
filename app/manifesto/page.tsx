@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import { PageLayout } from '@/components/PageLayout';
 
 export const metadata: Metadata = {
   title: 'Manifesto - Slow Brief',
@@ -8,21 +9,7 @@ export const metadata: Metadata = {
 
 export default function ManifestoPage() {
   return (
-    <div className="container">
-      <header>
-        <h1 className="site-title">
-          <Link href="/">Slow Brief</Link>
-        </h1>
-        <p className="tagline">What matters, without the feed.</p>
-        <nav>
-          <Link href="/archive">Archive</Link>
-          <Link href="/about">About</Link>
-          <Link href="/manifesto">Manifesto</Link>
-          <Link href="/subscribe">Subscribe</Link>
-        </nav>
-      </header>
-
-      <main>
+    <PageLayout>
         <h1>Editorial Manifesto</h1>
 
         <blockquote style={{
@@ -67,11 +54,6 @@ export default function ManifestoPage() {
             Learn more <Link href="/about">about Slow Brief</Link>, or <Link href="/subscribe">subscribe</Link> to receive the full brief each day.
           </p>
         </section>
-      </main>
-
-      <footer>
-        <p>&copy; {new Date().getFullYear()} Slow Brief. One brief per day.</p>
-      </footer>
-    </div>
+    </PageLayout>
   );
 }

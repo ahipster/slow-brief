@@ -1,13 +1,31 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
-import { Header } from '@/components/Header';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthProvider';
+import { PageLayout } from '@/components/PageLayout';
 
 export default function SubscribePage() {
   const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState<string | null>(null);
+  const [hasSubscription, setHasSubscription] = useState(false);
+  const [checkingSubscription, setCheckingSubscription] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      fetch('/api/subscription-status')
+        .then(res => res.json())
+        .then(data => {
+          setHasSubscription(data.hasSubscription || false);
+          setCheckingSubscription(false);
+        })
+        .catch(() => {
+          setCheckingSubscription(false);
+        });
+    } else {
+      setCheckingSubscription(false);
+    }
+  }, [user]);
 
   const handleSubscribe = async (priceId: 'monthly' | 'annual') => {
     if (!user) {
@@ -42,16 +60,45 @@ export default function SubscribePage() {
     }
   };
   return (
-    <div className="container">
-      <Header />
-
-      <main>
+    <PageLayout>
         <h1>Subscribe</h1>
 
         <section style={{ marginBottom: '3rem' }}>
           <p style={{ fontSize: '1.1rem', marginBottom: '2rem' }}>
             One brief per day. Deeper context, deliberate judgment, calm clarity.
           </p>
+
+          {!authLoading && !checkingSubscription && user && hasSubscription && (
+            <div style={{
+              maxWidth: '500px',
+              margin: '0 auto 2rem',
+              padding: '1.5rem',
+              background: '#f0fdf4',
+              border: '1px solid #86efac',
+              borderRadius: '8px',
+              textAlign: 'center',
+            }}>
+              <p style={{ marginBottom: '1rem', color: '#16a34a', fontWeight: 500 }}>
+                ✓ You're already subscribed!
+              </p>
+              <p style={{ fontSize: '0.9rem', marginBottom: '1rem', color: '#666' }}>
+                You have full access to all briefs.
+              </p>
+              <Link
+                href="/account"
+                style={{
+                  display: 'inline-block',
+                  padding: '0.75rem 1.5rem',
+                  background: '#222',
+                  color: '#fff',
+                  textDecoration: 'none',
+                  borderRadius: '4px',
+                }}
+              >
+                Manage Subscription
+              </Link>
+            </div>
+          )}
 
           {!authLoading && !user && (
             <div style={{
@@ -85,91 +132,88 @@ export default function SubscribePage() {
             </div>
           )}
 
-          <div style={{
-            display: 'grid',
-            gap: '1.5rem',
-            maxWidth: '500px',
-            margin: '0 auto 2rem'
-          }}>
+          {!hasSubscription && (
             <div style={{
-              border: '1px solid #ddd',
-              padding: '2rem',
-              borderRadius: '8px',
-            }}>
-              <h2 style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>Monthly</h2>
-              <p style={{ fontSize: '2rem', fontWeight: 600, marginBottom: '1rem' }}>€5 <span style={{ fontSize: '1rem', fontWeight: 400 }}>/month</span></p>
-              <button
-                onClick={() => handleSubscribe('monthly')}
-                disabled={!user || loading !== null}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  background: '#fff',
-                  color: '#222',
-                  border: '1px solid #222',
-                  borderRadius: '4px',
-                  fontSize: '1rem',
-                  cursor: !user || loading ? 'not-allowed' : 'pointer',
-                  opacity: !user || loading ? 0.6 : 1,
-                }}
-              >
-                {loading === 'monthly' ? 'Processing...' : 'Subscribe Monthly'}
-              </button>
-            </div>
-
-            <div style={{
-              border: '2px solid #222',
-              padding: '2rem',
-              borderRadius: '8px',
-              position: 'relative',
+              display: 'grid',
+              gap: '1.5rem',
+              maxWidth: '500px',
+              margin: '0 auto 2rem'
             }}>
               <div style={{
-                position: 'absolute',
-                top: '-12px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                background: '#222',
-                color: '#fff',
-                padding: '0.25rem 0.75rem',
-                borderRadius: '4px',
-                fontSize: '0.75rem',
-                fontWeight: 600,
+                border: '1px solid #ddd',
+                padding: '2rem',
+                borderRadius: '8px',
               }}>
-                RECOMMENDED
+                <h2 style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>Monthly</h2>
+                <p style={{ fontSize: '2rem', fontWeight: 600, marginBottom: '1rem' }}>€5 <span style={{ fontSize: '1rem', fontWeight: 400 }}>/month</span></p>
+                <button
+                  onClick={() => handleSubscribe('monthly')}
+                  disabled={!user || loading !== null}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    background: '#fff',
+                    color: '#222',
+                    border: '1px solid #222',
+                    borderRadius: '4px',
+                    fontSize: '1rem',
+                    cursor: !user || loading ? 'not-allowed' : 'pointer',
+                    opacity: !user || loading ? 0.6 : 1,
+                  }}
+                >
+                  {loading === 'monthly' ? 'Processing...' : 'Subscribe Monthly'}
+                </button>
               </div>
-              <h2 style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>Annual</h2>
-              <p style={{ fontSize: '2rem', fontWeight: 600, marginBottom: '0.25rem' }}>€50 <span style={{ fontSize: '1rem', fontWeight: 400 }}>/year</span></p>
-              <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '1rem' }}>Save €10</p>
-              <button
-                onClick={() => handleSubscribe('annual')}
-                disabled={!user || loading !== null}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
+
+              <div style={{
+                border: '2px solid #222',
+                padding: '2rem',
+                borderRadius: '8px',
+                position: 'relative',
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  top: '-12px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
                   background: '#222',
                   color: '#fff',
-                  border: 'none',
+                  padding: '0.25rem 0.75rem',
                   borderRadius: '4px',
-                  fontSize: '1rem',
-                  cursor: !user || loading ? 'not-allowed' : 'pointer',
-                  opacity: !user || loading ? 0.6 : 1,
-                }}
-              >
-                {loading === 'annual' ? 'Processing...' : 'Subscribe Annually'}
-              </button>
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                }}>
+                  RECOMMENDED
+                </div>
+                <h2 style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>Annual</h2>
+                <p style={{ fontSize: '2rem', fontWeight: 600, marginBottom: '0.25rem' }}>€50 <span style={{ fontSize: '1rem', fontWeight: 400 }}>/year</span></p>
+                <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '1rem' }}>Save €10</p>
+                <button
+                  onClick={() => handleSubscribe('annual')}
+                  disabled={!user || loading !== null}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    background: '#222',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    fontSize: '1rem',
+                    cursor: !user || loading ? 'not-allowed' : 'pointer',
+                    opacity: !user || loading ? 0.6 : 1,
+                  }}
+                >
+                  {loading === 'annual' ? 'Processing...' : 'Subscribe Annually'}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           <div style={{ textAlign: 'center', color: '#666', fontSize: '0.9rem' }}>
             <p>One plan. No tiers. No trials.</p>
             <p style={{ marginTop: '0.5rem' }}>This signals confidence and restraint.</p>
           </div>
         </section>
-      </main>
-
-      <footer>
-        <p>&copy; {new Date().getFullYear()} Slow Brief. One brief per day.</p>
-      </footer>
-    </div>
+    </PageLayout>
   );
 }

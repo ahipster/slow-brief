@@ -26,20 +26,23 @@ export function Header() {
         {!loading && (
           <>
             {user ? (
-              <button
-                onClick={handleSignOut}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#666',
-                  cursor: 'pointer',
-                  fontSize: 'inherit',
-                  padding: 0,
-                  textDecoration: 'underline',
-                }}
-              >
-                Log Out
-              </button>
+              <>
+                <Link href="/account">Account</Link>
+                <button
+                  onClick={handleSignOut}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#666',
+                    cursor: 'pointer',
+                    fontSize: 'inherit',
+                    padding: 0,
+                    textDecoration: 'underline',
+                  }}
+                >
+                  Log Out
+                </button>
+              </>
             ) : (
               <Link href="/login">Log In</Link>
             )}

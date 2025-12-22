@@ -21,13 +21,16 @@ Last Updated: 2025-12-22
 - [x] Test login flow end-to-end
 - [x] Test payment flow with webhook
 - [x] Verify paywall enforcement works
+- [x] Commit all project files to git (initial commit: 67a5838)
+- [x] Add test briefs to Firestore (2 test briefs created)
+- [x] Polish UI/typography (refined spacing, colors, favicon)
+- [x] Commit UI polish changes (commit: 90a79d7)
 
 ## 🔄 In Progress
 
-- [ ] Commit all project files to git
-- [ ] Add test briefs to Firestore
-- [ ] Polish UI/typography
 - [ ] Deploy to Firebase App Hosting
+- [ ] Configure production environment variables
+- [ ] Set up production Stripe webhook
 
 ## 📝 Todo - Git & Version Control
 
