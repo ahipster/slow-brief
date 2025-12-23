@@ -359,7 +359,7 @@ export function AdminPanel({ initialCandidates, initialPublished }: AdminPanelPr
           <strong> publishDate</strong> (UTC ISO string).
         </p>
         <p style={{ marginBottom: '1rem', color: '#666' }}>
-          Sections format: <code>[{{"title":"Section","subsections":["Sub 1","Sub 2"]}}]</code>
+          Sections format: <code>{`[{"title":"Section","subsections":["Sub 1","Sub 2"]}]`}</code>
         </p>
         <input
           type="file"
