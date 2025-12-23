@@ -11,6 +11,12 @@ service cloud.firestore {
                       get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
+    // Candidate briefs: admin-only access
+    match /briefs_candidates/{candidateId} {
+      allow read, write: if request.auth != null &&
+                            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
     // Users: admin-only access
     match /users/{userId} {
       allow read, write: if request.auth != null &&

@@ -45,6 +45,16 @@ export async function checkSubscription(uid: string): Promise<boolean> {
   }
 }
 
+export async function getUserRole(uid: string): Promise<string | null> {
+  try {
+    const userDoc = await adminDb.collection('users').doc(uid).get();
+    const userData = userDoc.data();
+    return userData?.role ?? null;
+  } catch (error) {
+    return null;
+  }
+}
+
 // Server-side: Create session cookie from ID token
 export async function createSessionCookie(idToken: string) {
   const expiresIn = 60 * 60 * 24 * 14 * 1000; // 14 days
