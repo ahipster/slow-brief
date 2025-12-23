@@ -19,8 +19,6 @@ async function getCandidates(): Promise<CandidateRecord[]> {
       headline: data.headline ?? '',
       freeHtml: data.freeHtml ?? '',
       paidHtml: data.paidHtml ?? '',
-      toc: data.toc ?? [],
-      sections: data.sections ?? [],
       publishDate: data.publishDate ? data.publishDate.toDate().toISOString() : null,
       status: data.status ?? 'candidate',
       updatedAt: data.updatedAt ? data.updatedAt.toDate().toISOString() : '',
@@ -44,8 +42,6 @@ async function getPublishedBriefs(): Promise<PublishedBriefRecord[]> {
       headline: data.headline ?? '',
       freeHtml: data.freeHtml ?? '',
       paidHtml: data.paidHtml ?? '',
-      toc: data.toc ?? [],
-      sections: data.sections ?? [],
       publishDate: data.publishDate ? data.publishDate.toDate().toISOString() : '',
       status: data.status ?? 'published',
       updatedAt: data.updatedAt ? data.updatedAt.toDate().toISOString() : '',
@@ -73,7 +69,7 @@ export default async function AccountPage() {
     <PageLayout>
       <h1>Admin</h1>
       <p style={{ color: '#666', marginBottom: '2rem' }}>
-        Upload, review, schedule, and publish briefs. Times are UTC.
+        Upload, review, schedule, and publish briefs. Times are UTC and follow a 4-hour cadence.
       </p>
       <AdminPanel initialCandidates={candidates} initialPublished={published} />
     </PageLayout>

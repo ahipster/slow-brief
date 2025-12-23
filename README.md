@@ -6,7 +6,7 @@
 
 ## Overview
 
-Slow Brief is a daily editorial platform that replaces algorithmic feeds with deliberate judgment. One brief per day. Always.
+Slow Brief is a daily editorial platform that replaces algorithmic feeds with deliberate judgment.
 
 ### Core Promise
 
@@ -142,7 +142,7 @@ Paid content is **never** sent to non-subscribers:
 
 > Slow Brief exists to reduce noise, not add to it.
 >
-> We publish one brief per day.
+> We choose deliberately.
 > We choose deliberately.
 > We omit aggressively.
 >
@@ -176,5 +176,3 @@ Paid content is **never** sent to non-subscribers:
 All rights reserved.
 
 ---
-
-**One brief per day. Always.**

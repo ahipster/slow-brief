@@ -7,7 +7,7 @@
 
 ## Product Vision
 
-Slow Brief is a daily editorial platform that replaces algorithmic feeds with deliberate judgment. One brief per day. Always.
+Slow Brief is a daily editorial platform that replaces algorithmic feeds with deliberate judgment.
 
 ### Core Promise
 
@@ -123,17 +123,12 @@ interface User {
 - **Content**: Free section for all, paid section for subscribers
 - **Query**: `WHERE slug == [slug] AND status == 'published'`
 
-### 4. About `/about`
-- **Purpose**: Explain what Slow Brief is and isn't
+### 4. Manifesto `/manifesto`
+- **Purpose**: Editorial philosophy and principles, plus what Slow Brief is/is not
 - **SSR**: No (static)
 - **Auth Required**: No
 
-### 5. Manifesto `/manifesto`
-- **Purpose**: Editorial philosophy and principles
-- **SSR**: No (static)
-- **Auth Required**: No
-
-### 6. Subscribe `/subscribe`
+### 5. Subscribe `/subscribe`
 - **Purpose**: Subscription options and Stripe checkout
 - **SSR**: No (client-side)
 - **Auth Required**: No (but must be logged in to subscribe)
@@ -143,7 +138,7 @@ interface User {
   - Monthly: €5/month
   - Annual: €50/year (recommended)
 
-### 7. Login `/login`
+### 6. Login `/login`
 - **Purpose**: Passwordless email login
 - **SSR**: No
 - **Features**:
@@ -352,7 +347,7 @@ line-height: 1.7
 
 > Slow Brief exists to reduce noise, not add to it.
 >
-> We publish one brief per day.
+> We choose deliberately.
 > We choose deliberately.
 > We omit aggressively.
 >
@@ -436,7 +431,7 @@ NEXT_PUBLIC_BASE_URL=https://slowbrief.com
 ### Optimization
 
 - Server-side rendering for paywall pages
-- Static generation for public pages (About, Manifesto)
+- Static generation for public pages (Manifesto)
 - Minimal JavaScript (auth and Stripe only)
 - No images in critical path
 - No third-party analytics
@@ -514,7 +509,6 @@ slow-brief/
 │   ├── layout.tsx              # Root layout with auth provider
 │   ├── globals.css             # Global styles
 │   ├── page.tsx                # Homepage (today's brief)
-│   ├── about/page.tsx          # About page
 │   ├── account/page.tsx        # Account management
 │   ├── archive/page.tsx        # Archive listing
 │   ├── briefs/[slug]/page.tsx  # Individual brief (SSR)
@@ -638,5 +632,3 @@ These features are explicitly **deferred** (not in initial launch):
 - **Support**: [Define support email]
 
 ---
-
-**One brief per day. Always.**

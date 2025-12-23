@@ -7,7 +7,7 @@
 
 ## 1. Product Vision
 
-**Slow Brief** is a daily editorial companion that replaces algorithmic feeds with a single, deliberate act of judgment. Each day, **exactly one item** is chosen and framed calmly, with enough context to understand why it matters — and with restraint about what does not.
+**Slow Brief** is a daily editorial companion that replaces algorithmic feeds with a single, deliberate act of judgment. Each day, briefs are chosen and framed calmly, with enough context to understand why it matters — and with restraint about what does not.
 
 ### The Core Promise
 
@@ -29,7 +29,6 @@ If someone reads Slow Brief each day:
 - A finite alternative to feeds
 - Human-voiced, **never AI-voiced**
 - Opinionated in selection, neutral in tone
-- One brief per day. Always.
 
 ### ✗ It IS NOT:
 - A news site
@@ -47,7 +46,7 @@ If someone reads Slow Brief each day:
 
 > **Slow Brief exists to reduce noise, not add to it.**
 >
-> We publish one brief per day.
+> We choose deliberately.
 > We choose deliberately.
 > We omit aggressively.
 >
@@ -157,9 +156,8 @@ The site has **exactly 6 pages**:
 1. **`/`** - Homepage (today's brief, free section visible)
 2. **`/archive`** - Chronological list (title + date only)
 3. **`/briefs/[slug]`** - Individual brief (server-side paywall)
-4. **`/about`** - What Slow Brief is / is not
-5. **`/subscribe`** - One plan, one price
-6. **`/manifesto`** - Editorial constitution
+4. **`/subscribe`** - One plan, one price
+5. **`/manifesto`** - Editorial constitution + what Slow Brief is / is not
 
 **No additional pages should be created without explicit approval.**
 

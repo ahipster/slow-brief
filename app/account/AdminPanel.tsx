@@ -11,7 +11,6 @@ import {
 import type {
   CandidateInput,
   CandidateRecord,
-  CandidateSection,
   PublishedBriefRecord,
 } from './types';
 
@@ -22,8 +21,6 @@ const REQUIRED_HEADERS = {
   headline: ['headline', 'title'],
   freeHtml: ['freehtml', 'pre-content', 'precontent', 'pre_content', 'free'],
   paidHtml: ['paidhtml', 'paid'],
-  sections: ['sections', 'subsections', 'sectionsjson', 'sections_json'],
-  toc: ['toc', 'tableofcontents', 'table_of_contents'],
   publishDate: ['publishdate', 'publish_date', 'date'],
 };
 
@@ -38,8 +35,6 @@ interface CandidateFormState {
   headline: string;
   freeHtml: string;
   paidHtml: string;
-  tocText: string;
-  sectionsText: string;
   publishDate: string;
   status: 'candidate' | 'scheduled' | 'published';
 }
@@ -50,8 +45,6 @@ interface PublishedFormState {
   headline: string;
   freeHtml: string;
   paidHtml: string;
-  tocText: string;
-  sectionsText: string;
   publishDate: string;
 }
 
@@ -127,35 +120,30 @@ function findHeaderIndex(headers: string[], options: string[]) {
   return -1;
 }
 
-function parseList(value: string) {
-  return value
-    .split('|')
-    .map(item => item.trim())
-    .filter(Boolean);
-}
+function getNextSlots(count: number) {
+  const now = new Date();
+  const base = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate(),
+    now.getUTCHours(),
+    0,
+    0,
+  ));
+  const nextSlotHour = (Math.floor(base.getUTCHours() / 4) + 1) * 4;
+  const firstSlot = new Date(Date.UTC(
+    base.getUTCFullYear(),
+    base.getUTCMonth(),
+    base.getUTCDate() + (nextSlotHour >= 24 ? 1 : 0),
+    nextSlotHour % 24,
+    0,
+    0,
+  ));
 
-function formatList(list: string[]) {
-  return list.join('\n');
-}
-
-function parseSections(value: string): CandidateSection[] {
-  if (!value.trim()) {
-    return [];
-  }
-
-  const parsed = JSON.parse(value) as CandidateSection[];
-  if (!Array.isArray(parsed)) {
-    throw new Error('Sections must be a JSON array.');
-  }
-
-  return parsed.map(section => ({
-    title: section.title ?? '',
-    subsections: Array.isArray(section.subsections) ? section.subsections : [],
-  }));
-}
-
-function formatSections(sections: CandidateSection[]) {
-  return JSON.stringify(sections, null, 2);
+  return Array.from({ length: count }, (_, index) => {
+    const slot = new Date(firstSlot.getTime() + index * 4 * 60 * 60 * 1000);
+    return slot.toISOString().replace('.000Z', 'Z');
+  });
 }
 
 export function AdminPanel({ initialCandidates, initialPublished }: AdminPanelProps) {
@@ -166,6 +154,7 @@ export function AdminPanel({ initialCandidates, initialPublished }: AdminPanelPr
   const [activeCandidate, setActiveCandidate] = useState<CandidateFormState | null>(null);
   const [activePublished, setActivePublished] = useState<PublishedFormState | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const nextSlots = useMemo(() => getNextSlots(6), []);
 
   const candidateRows = useMemo(() => initialCandidates, [initialCandidates]);
   const publishedRows = useMemo(() => initialPublished, [initialPublished]);
@@ -177,8 +166,6 @@ export function AdminPanel({ initialCandidates, initialPublished }: AdminPanelPr
       headline: candidate.headline,
       freeHtml: candidate.freeHtml,
       paidHtml: candidate.paidHtml,
-      tocText: formatList(candidate.toc),
-      sectionsText: formatSections(candidate.sections),
       publishDate: candidate.publishDate ?? '',
       status: candidate.status,
     });
@@ -192,8 +179,6 @@ export function AdminPanel({ initialCandidates, initialPublished }: AdminPanelPr
       headline: brief.headline,
       freeHtml: brief.freeHtml,
       paidHtml: brief.paidHtml,
-      tocText: formatList(brief.toc ?? []),
-      sectionsText: formatSections(brief.sections ?? []),
       publishDate: brief.publishDate,
     });
     setActionMessage(null);
@@ -215,12 +200,10 @@ export function AdminPanel({ initialCandidates, initialPublished }: AdminPanelPr
     const headlineIndex = findHeaderIndex(headers, REQUIRED_HEADERS.headline);
     const freeIndex = findHeaderIndex(headers, REQUIRED_HEADERS.freeHtml);
     const paidIndex = findHeaderIndex(headers, REQUIRED_HEADERS.paidHtml);
-    const tocIndex = findHeaderIndex(headers, REQUIRED_HEADERS.toc);
-    const sectionsIndex = findHeaderIndex(headers, REQUIRED_HEADERS.sections);
     const publishDateIndex = findHeaderIndex(headers, REQUIRED_HEADERS.publishDate);
 
-    if (slugIndex === -1 || headlineIndex === -1 || freeIndex === -1 || paidIndex === -1 || sectionsIndex === -1) {
-      setUploadError('Missing required columns. Required: slug, headline/title, freeHtml/pre-content, paidHtml, sections.');
+    if (slugIndex === -1 || headlineIndex === -1 || freeIndex === -1 || paidIndex === -1) {
+      setUploadError('Missing required columns. Required: slug, headline/title, freeHtml/pre-content, paidHtml.');
       return;
     }
 
@@ -233,8 +216,6 @@ export function AdminPanel({ initialCandidates, initialPublished }: AdminPanelPr
       const headline = row[headlineIndex]?.trim() ?? '';
       const freeHtml = row[freeIndex]?.trim() ?? '';
       const paidHtml = row[paidIndex]?.trim() ?? '';
-      const tocValue = tocIndex >= 0 ? row[tocIndex] ?? '' : '';
-      const sectionsValue = row[sectionsIndex] ?? '';
       const publishDateValue = publishDateIndex >= 0 ? row[publishDateIndex]?.trim() ?? '' : '';
 
       if (!slug || !headline || !freeHtml || !paidHtml) {
@@ -247,15 +228,6 @@ export function AdminPanel({ initialCandidates, initialPublished }: AdminPanelPr
         return;
       }
 
-      let sections: CandidateSection[] = [];
-      try {
-        sections = parseSections(sectionsValue);
-      } catch (error) {
-        errors.push(`Row ${rowNumber}: ${(error as Error).message}`);
-        return;
-      }
-
-      const toc = tocValue ? parseList(tocValue) : sections.map(section => section.title).filter(Boolean);
       const publishDate = publishDateValue || null;
 
       parsedCandidates.push({
@@ -263,8 +235,6 @@ export function AdminPanel({ initialCandidates, initialPublished }: AdminPanelPr
         headline,
         freeHtml,
         paidHtml,
-        toc,
-        sections,
         publishDate,
       });
     });
@@ -289,16 +259,11 @@ export function AdminPanel({ initialCandidates, initialPublished }: AdminPanelPr
     }
 
     try {
-      const sections = parseSections(activeCandidate.sectionsText);
-      const toc = activeCandidate.tocText ? activeCandidate.tocText.split('\n').map(item => item.trim()).filter(Boolean) : [];
-
       await updateCandidate(activeCandidate.id, {
         slug: activeCandidate.slug,
         headline: activeCandidate.headline,
         freeHtml: activeCandidate.freeHtml,
         paidHtml: activeCandidate.paidHtml,
-        toc,
-        sections,
         publishDate: activeCandidate.publishDate || null,
         status: activeCandidate.status === 'published' ? 'candidate' : activeCandidate.status,
       });
@@ -330,16 +295,11 @@ export function AdminPanel({ initialCandidates, initialPublished }: AdminPanelPr
     }
 
     try {
-      const sections = parseSections(activePublished.sectionsText);
-      const toc = activePublished.tocText ? activePublished.tocText.split('\n').map(item => item.trim()).filter(Boolean) : [];
-
       await updatePublishedBrief(activePublished.id, {
         slug: activePublished.slug,
         headline: activePublished.headline,
         freeHtml: activePublished.freeHtml,
         paidHtml: activePublished.paidHtml,
-        toc,
-        sections,
         publishDate: activePublished.publishDate,
       });
       setActionMessage('Published brief updated.');
@@ -355,11 +315,10 @@ export function AdminPanel({ initialCandidates, initialPublished }: AdminPanelPr
         <h2 style={{ marginBottom: '0.75rem' }}>CSV Upload</h2>
         <p style={{ marginBottom: '0.75rem', color: '#666' }}>
           Required columns: <strong>slug</strong>, <strong>headline</strong>, <strong>freeHtml</strong> (pre-content),
-          <strong> paidHtml</strong>, <strong>sections</strong> (JSON array). Optional: <strong>toc</strong>,
-          <strong> publishDate</strong> (UTC ISO string).
+          <strong> paidHtml</strong>. Optional: <strong>publishDate</strong> (UTC ISO string).
         </p>
         <p style={{ marginBottom: '1rem', color: '#666' }}>
-          Sections format: <code>{`[{"title":"Section","subsections":["Sub 1","Sub 2"]}]`}</code>
+          Publish dates must align to the 4-hour UTC cadence (00:00, 04:00, 08:00, 12:00, 16:00, 20:00).
         </p>
         <input
           type="file"
@@ -440,32 +399,17 @@ export function AdminPanel({ initialCandidates, initialPublished }: AdminPanelPr
               />
             </label>
             <label style={{ display: 'block', marginBottom: '0.75rem' }}>
-              Table of contents (one per line)
-              <textarea
-                value={activeCandidate.tocText}
-                onChange={event => setActiveCandidate({ ...activeCandidate, tocText: event.target.value })}
-                rows={4}
-                style={{ width: '100%', padding: '0.5rem', marginTop: '0.25rem' }}
-              />
-            </label>
-            <label style={{ display: 'block', marginBottom: '0.75rem' }}>
-              Sections JSON
-              <textarea
-                value={activeCandidate.sectionsText}
-                onChange={event => setActiveCandidate({ ...activeCandidate, sectionsText: event.target.value })}
-                rows={6}
-                style={{ width: '100%', padding: '0.5rem', marginTop: '0.25rem', fontFamily: 'monospace' }}
-              />
-            </label>
-            <label style={{ display: 'block', marginBottom: '1rem' }}>
-              Publish date (UTC, ISO-8601)
-              <input
-                type="text"
-                placeholder="2025-01-01T08:00:00Z"
-                value={activeCandidate.publishDate}
+              Publish date (UTC, 4-hour slots)
+              <select
+                value={activeCandidate.publishDate || ''}
                 onChange={event => setActiveCandidate({ ...activeCandidate, publishDate: event.target.value })}
                 style={{ width: '100%', padding: '0.5rem', marginTop: '0.25rem' }}
-              />
+              >
+                <option value="">Unscheduled</option>
+                {nextSlots.map(slot => (
+                  <option key={slot} value={slot}>{slot}</option>
+                ))}
+              </select>
             </label>
             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
               <button
@@ -566,32 +510,16 @@ export function AdminPanel({ initialCandidates, initialPublished }: AdminPanelPr
               />
             </label>
             <label style={{ display: 'block', marginBottom: '0.75rem' }}>
-              Table of contents (one per line)
-              <textarea
-                value={activePublished.tocText}
-                onChange={event => setActivePublished({ ...activePublished, tocText: event.target.value })}
-                rows={4}
-                style={{ width: '100%', padding: '0.5rem', marginTop: '0.25rem' }}
-              />
-            </label>
-            <label style={{ display: 'block', marginBottom: '0.75rem' }}>
-              Sections JSON
-              <textarea
-                value={activePublished.sectionsText}
-                onChange={event => setActivePublished({ ...activePublished, sectionsText: event.target.value })}
-                rows={6}
-                style={{ width: '100%', padding: '0.5rem', marginTop: '0.25rem', fontFamily: 'monospace' }}
-              />
-            </label>
-            <label style={{ display: 'block', marginBottom: '1rem' }}>
-              Publish date (UTC, ISO-8601)
-              <input
-                type="text"
-                placeholder="2025-01-01T08:00:00Z"
-                value={activePublished.publishDate}
+              Publish date (UTC, 4-hour slots)
+              <select
+                value={activePublished.publishDate || ''}
                 onChange={event => setActivePublished({ ...activePublished, publishDate: event.target.value })}
                 style={{ width: '100%', padding: '0.5rem', marginTop: '0.25rem' }}
-              />
+              >
+                {nextSlots.map(slot => (
+                  <option key={slot} value={slot}>{slot}</option>
+                ))}
+              </select>
             </label>
             <button
               onClick={handlePublishedSave}

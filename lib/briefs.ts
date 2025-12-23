@@ -10,17 +10,15 @@ export interface Brief {
   status: 'draft' | 'published';
 }
 
-// Get today's published brief
-export async function getTodaysBrief(): Promise<Brief | null> {
+// Get the most recent published brief up to now
+export async function getCurrentBrief(): Promise<Brief | null> {
   const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
 
   const snapshot = await adminDb
     .collection('briefs')
     .where('status', '==', 'published')
-    .where('publishDate', '>=', startOfDay)
-    .where('publishDate', '<', endOfDay)
+    .where('publishDate', '<=', now)
+    .orderBy('publishDate', 'desc')
     .limit(1)
     .get();
 
@@ -50,7 +48,7 @@ export async function getBriefBySlug(slug: string): Promise<Brief | null> {
 }
 
 // Get all published briefs (for archive) - metadata only
-export async function getAllBriefs(): Promise<Array<Pick<Brief, 'slug' | 'headline' | 'publishDate'>>> {
+export async function getAllBriefs(): Promise<Array<Pick<Brief, 'slug' | 'headline' | 'publishDate' | 'freeHtml'>>> {
   const snapshot = await adminDb
     .collection('briefs')
     .where('status', '==', 'published')
@@ -62,6 +60,7 @@ export async function getAllBriefs(): Promise<Array<Pick<Brief, 'slug' | 'headli
     return {
       slug: data.slug,
       headline: data.headline,
+      freeHtml: data.freeHtml,
       publishDate: data.publishDate.toDate(),
     };
   });

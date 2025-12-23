@@ -1,7 +1,13 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { User, onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
+import {
+  User,
+  onAuthStateChanged,
+  signOut as firebaseSignOut,
+  setPersistence,
+  browserLocalPersistence,
+} from 'firebase/auth';
 import { auth } from '@/lib/firebase-client';
 
 interface AuthContextType {
@@ -21,6 +27,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setPersistence(auth, browserLocalPersistence).catch((error) => {
+      console.warn('Failed to set auth persistence:', error);
+    });
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);

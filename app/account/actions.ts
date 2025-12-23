@@ -4,7 +4,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 import { revalidatePath } from 'next/cache';
 import { adminDb } from '@/lib/firebase-admin';
 import { getCurrentUser, getUserRole } from '@/lib/auth';
-import { CandidateInput, CandidateSection } from './types';
+import { CandidateInput } from './types';
 
 function countWords(text: string) {
   return text.trim().split(/\s+/).filter(Boolean).length;
@@ -34,14 +34,16 @@ function parsePublishDate(dateValue: string | null) {
     throw new Error('Invalid publish date.');
   }
 
-  return Timestamp.fromDate(date);
-}
+  if (
+    date.getUTCMinutes() !== 0 ||
+    date.getUTCSeconds() !== 0 ||
+    date.getUTCMilliseconds() !== 0 ||
+    date.getUTCHours() % 4 !== 0
+  ) {
+    throw new Error('Publish date must be aligned to the 4-hour UTC cadence (00:00, 04:00, 08:00, 12:00, 16:00, 20:00).');
+  }
 
-function normalizeSections(sections: CandidateSection[]) {
-  return sections.map(section => ({
-    title: section.title.trim(),
-    subsections: section.subsections.map(subsection => subsection.trim()).filter(Boolean),
-  })).filter(section => section.title);
+  return Timestamp.fromDate(date);
 }
 
 export async function createCandidates(records: CandidateInput[]) {
@@ -73,8 +75,6 @@ export async function createCandidates(records: CandidateInput[]) {
       headline: record.headline.trim(),
       freeHtml: record.freeHtml,
       paidHtml: record.paidHtml,
-      toc: record.toc.map(item => item.trim()).filter(Boolean),
-      sections: normalizeSections(record.sections),
       publishDate,
       status,
       createdAt: now,
@@ -106,8 +106,6 @@ export async function updateCandidate(candidateId: string, updates: CandidateInp
     headline: updates.headline.trim(),
     freeHtml: updates.freeHtml,
     paidHtml: updates.paidHtml,
-    toc: updates.toc.map(item => item.trim()).filter(Boolean),
-    sections: normalizeSections(updates.sections),
     publishDate,
     status: publishDate ? 'scheduled' : updates.status,
     updatedAt: Timestamp.now(),
@@ -150,8 +148,6 @@ export async function publishCandidate(candidateId: string) {
     headline: data.headline,
     freeHtml: data.freeHtml,
     paidHtml: data.paidHtml,
-    toc: data.toc ?? [],
-    sections: data.sections ?? [],
     publishDate,
     status: 'published',
     updatedAt: Timestamp.now(),
@@ -188,8 +184,6 @@ export async function updatePublishedBrief(
     headline: updates.headline.trim(),
     freeHtml: updates.freeHtml,
     paidHtml: updates.paidHtml,
-    toc: updates.toc.map(item => item.trim()).filter(Boolean),
-    sections: normalizeSections(updates.sections),
     publishDate,
     updatedAt: Timestamp.now(),
   });

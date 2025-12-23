@@ -160,7 +160,7 @@ export default function VerifyEmailPage() {
       </main>
 
       <footer>
-        <p>&copy; {new Date().getFullYear()} Slow Brief. One brief per day.</p>
+        <p>&copy; {new Date().getFullYear()} Slow Brief.</p>
       </footer>
     </div>
   );

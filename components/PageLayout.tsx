@@ -10,7 +10,7 @@ export function PageLayout({ children }: PageLayoutProps) {
       <Header />
       <main>{children}</main>
       <footer>
-        <p>&copy; {new Date().getFullYear()} Slow Brief. One brief per day.</p>
+        <p>&copy; {new Date().getFullYear()} Slow Brief.</p>
       </footer>
     </div>
   );

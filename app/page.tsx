@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { getTodaysBrief } from '@/lib/briefs';
+import { getCurrentBrief } from '@/lib/briefs';
 import Brief from '@/components/Brief';
 import { PageLayout } from '@/components/PageLayout';
 
@@ -11,12 +11,12 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const brief = await getTodaysBrief();
+  const brief = await getCurrentBrief();
 
   return (
     <PageLayout>
       {brief ? (
-        <Brief brief={brief} />
+        <Brief brief={brief} showCountdown />
       ) : (
         <p>No brief published today. Check back tomorrow.</p>
       )}

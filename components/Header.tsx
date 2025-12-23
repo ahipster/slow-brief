@@ -2,16 +2,50 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { useAuth } from './AuthProvider';
+import { ReleaseCountdown } from './ReleaseCountdown';
 
 export function Header() {
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
     router.refresh();
   };
+
+  useEffect(() => {
+    let active = true;
+
+    const loadRole = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/me');
+        if (!response.ok) {
+          return;
+        }
+        const data = await response.json();
+        if (active) {
+          setIsAdmin(data.role === 'admin');
+        }
+      } catch (error) {
+        if (active) {
+          setIsAdmin(false);
+        }
+      }
+    };
+
+    loadRole();
+    return () => {
+      active = false;
+    };
+  }, [user]);
 
   return (
     <header className="site-header">
@@ -23,9 +57,8 @@ export function Header() {
       </div>
       <nav className="site-nav">
         <div className="nav-group">
-          <Link href="/">Today</Link>
-          <Link href="/archive">Archive</Link>
-          <Link href="/about">About</Link>
+          <Link href="/">Now</Link>
+          <Link href="/archive">Past</Link>
           <Link href="/manifesto">Manifesto</Link>
         </div>
         <span className="nav-divider" aria-hidden="true" />
@@ -35,6 +68,7 @@ export function Header() {
             <>
               {user ? (
                 <>
+                  {isAdmin && <Link href="/account">Admin</Link>}
                   <button
                     onClick={handleSignOut}
                     style={{

@@ -84,11 +84,9 @@ export default function SubscribePage() {
   };
   return (
     <PageLayout>
-      <h1>Subscribe</h1>
-
       <section style={{ marginBottom: '3rem' }}>
         <p style={{ fontSize: '1.1rem', marginBottom: '2rem' }}>
-          One brief per day. Deeper context, deliberate judgment, calm clarity.
+          Deeper context, deliberate judgment, calm clarity and slow reads.
         </p>
 
         {!authLoading && !checkingSubscription && user && hasSubscription && (
