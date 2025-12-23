@@ -1,0 +1,45 @@
+# Firebase App Hosting Configuration
+# https://firebase.google.com/docs/app-hosting
+
+runConfig:
+  # CPU and memory configuration
+  cpu: 1
+  memoryMiB: 512
+
+  # Maximum number of instances (concurrent requests)
+  maxInstances: 10
+  minInstances: 0
+
+  # Concurrency (requests per instance)
+  concurrency: 80
+
+env:
+  # Runtime environment variables
+  # Secrets should be configured in Firebase Console
+
+  # Firebase Client (Public)
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+
+  # Firebase Server (Secret)
+  - variable: FIREBASE_PROJECT_ID
+  - variable: FIREBASE_CLIENT_EMAIL
+  - variable: FIREBASE_PRIVATE_KEY
+    secret: FIREBASE_PRIVATE_KEY
+
+  # Stripe (Secret)
+  - variable: STRIPE_SECRET_KEY
+    secret: STRIPE_SECRET_KEY
+  - variable: STRIPE_WEBHOOK_SECRET
+    secret: STRIPE_WEBHOOK_SECRET
+  - variable: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  - variable: STRIPE_MONTHLY_PRICE_ID
+  - variable: STRIPE_ANNUAL_PRICE_ID
+
+  # App Config
+  - variable: NEXT_PUBLIC_BASE_URL
+    value: https://slow-brief.web.app

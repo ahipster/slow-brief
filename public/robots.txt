@@ -1,0 +1,6 @@
+# Robots.txt for Slow Brief
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://slowbrief.com/sitemap.xml
