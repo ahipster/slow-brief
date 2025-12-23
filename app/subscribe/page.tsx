@@ -211,7 +211,6 @@ export default function SubscribePage() {
 
           <div style={{ textAlign: 'center', color: '#666', fontSize: '0.9rem' }}>
             <p>One plan. No tiers. No trials.</p>
-            <p style={{ marginTop: '0.5rem' }}>This signals confidence and restraint.</p>
           </div>
         </section>
     </PageLayout>

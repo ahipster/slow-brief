@@ -1,330 +1,227 @@
-# Slow Brief - Setup & Deployment Guide
+# Slow Brief - First-Time Setup Guide
 
-This guide walks through setting up Firebase, Stripe, and deploying Slow Brief to production.
-
-## Prerequisites
-
-- [x] Firebase CLI installed and authenticated (✓ logged in as nekrosius.augustas@gmail.com)
-- [ ] Firebase project created with billing enabled
-- [ ] Stripe account with test/production keys
-- [ ] Domain registered (slowbrief.com)
-
-## Step 1: Create Firebase Project
-
-### Option A: Create via Firebase Console (Recommended)
-1. Go to https://console.firebase.google.com/
-2. Click "Add project"
-3. Project name: **slow-brief**
-4. Enable Google Analytics (optional)
-5. **IMPORTANT**: Upgrade to Blaze plan (pay-as-you-go) for:
-   - Firebase App Hosting
-   - Cloud Functions
-   - Firestore
-
-### Option B: Create via CLI
-```bash
-# This will open browser to create project
-firebase projects:create slow-brief
-```
-
-## Step 2: Initialize Firebase in Project
-
-```bash
-# Run from project root
-firebase init
-
-# Select:
-# - Firestore (database rules)
-# - Hosting (Firebase App Hosting)
-
-# When prompted:
-# - Use an existing project: slow-brief
-# - Firestore rules file: firestore.rules (already exists)
-# - Firestore indexes: firestore.indexes.json (create empty)
-# - Hosting public directory: .next (for Next.js build)
-# - Single-page app: No
-# - Set up automatic builds: No (we'll do this manually)
-```
-
-## Step 3: Enable Required Services
-
-### In Firebase Console:
-
-1. **Authentication**
-   - Go to Authentication → Sign-in method
-   - Enable "Email/Password" provider
-   - Enable "Email link (passwordless sign-in)"
-
-2. **Firestore Database**
-   - Go to Firestore Database
-   - Create database in production mode
-   - Choose region (e.g., us-central1)
-
-3. **Firebase App Hosting**
-   - Go to Hosting
-   - Set up Firebase App Hosting for Next.js
-
-## Step 4: Get Firebase Configuration
-
-### Get Client Config (for .env.local):
-1. Go to Project Settings → General
-2. Scroll to "Your apps"
-3. Click "Add app" → Web (</>) icon
-4. Register app: "Slow Brief Web"
-5. Copy the firebaseConfig object values:
-
-```bash
-NEXT_PUBLIC_FIREBASE_API_KEY=<from config>
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=<from config>
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=slow-brief
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=<from config>
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=<from config>
-NEXT_PUBLIC_FIREBASE_APP_ID=<from config>
-```
-
-### Get Admin SDK Config (for .env.local):
-1. Go to Project Settings → Service accounts
-2. Click "Generate new private key"
-3. Download JSON file
-4. Extract values:
-
-```bash
-FIREBASE_PROJECT_ID=<from JSON: project_id>
-FIREBASE_CLIENT_EMAIL=<from JSON: client_email>
-FIREBASE_PRIVATE_KEY="<from JSON: private_key>"
-```
-
-**Note**: The private key should be the full key including `-----BEGIN PRIVATE KEY-----` and `-----END PRIVATE KEY-----`
-
-## Step 5: Set Up Stripe
-
-### Create Products and Prices:
-1. Go to https://dashboard.stripe.com/
-2. Products → Add product:
-   - **Product 1**: Slow Brief Monthly
-     - Price: €5.00 EUR / month
-     - Billing period: Monthly
-     - Copy the Price ID: `price_xxxxx`
-
-   - **Product 2**: Slow Brief Annual
-     - Price: €50.00 EUR / year
-     - Billing period: Yearly
-     - Copy the Price ID: `price_xxxxx`
-
-### Get Stripe Keys:
-```bash
-# From Stripe Dashboard → Developers → API keys
-STRIPE_SECRET_KEY=sk_test_xxxxx  # (or sk_live_xxxxx for production)
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxxxx  # (or pk_live_xxxxx)
-
-# Price IDs from above
-STRIPE_MONTHLY_PRICE_ID=price_xxxxx
-STRIPE_ANNUAL_PRICE_ID=price_xxxxx
-```
-
-## Step 6: Configure Environment Variables
-
-### Local Development (.env.local):
-Copy all values from Steps 4 and 5 into `.env.local`:
-
-```bash
-# Copy from .env.example
-cp .env.example .env.local
-
-# Edit .env.local with your actual values
-nano .env.local
-```
-
-### Production (Firebase Environment):
-```bash
-# Set environment variables in Firebase
-firebase functions:config:set \
-  stripe.secret_key="sk_live_xxxxx" \
-  stripe.webhook_secret="whsec_xxxxx" \
-  firebase.project_id="slow-brief"
-
-# Or set via Firebase Console → Functions → Configuration
-```
-
-## Step 7: Deploy Firestore Security Rules
-
-```bash
-# Deploy rules (CRITICAL for paywall security)
-firebase deploy --only firestore:rules
-
-# Verify rules are deployed:
-# Go to Firestore → Rules in Firebase Console
-```
-
-## Step 8: Set Up Stripe Webhook
-
-### Get Webhook Endpoint URL:
-After deploying (Step 9), your webhook URL will be:
-```
-https://slowbrief.com/api/webhook/stripe
-```
-
-### Configure in Stripe:
-1. Go to Stripe Dashboard → Developers → Webhooks
-2. Click "Add endpoint"
-3. Endpoint URL: `https://slowbrief.com/api/webhook/stripe`
-4. Select events to listen to:
-   - `customer.subscription.created`
-   - `customer.subscription.updated`
-   - `customer.subscription.deleted`
-   - `checkout.session.completed`
-5. Click "Add endpoint"
-6. Copy the "Signing secret" (starts with `whsec_`)
-7. Add to `.env.local`:
-   ```bash
-   STRIPE_WEBHOOK_SECRET=whsec_xxxxx
-   ```
-
-## Step 9: Test Locally
-
-```bash
-# Install dependencies (if not already done)
-npm install
-
-# Run development server
-npm run dev
-
-# Open http://localhost:3000
-```
-
-### Test Checklist:
-- [ ] Homepage loads without errors
-- [ ] Navigation works (About, Manifesto, Subscribe, Archive)
-- [ ] Subscribe page shows pricing
-- [ ] Brief pages show paywall for non-subscribers
-
-## Step 10: Create Test Data in Firestore
-
-To test the paywall, you need at least one brief in Firestore:
-
-### Via Firebase Console:
-1. Go to Firestore Database
-2. Create collection: `briefs`
-3. Add document with auto-ID:
-   ```javascript
-   {
-     slug: "test-brief",
-     headline: "This is a test brief",
-     freeHtml: "<p>This is the free section. Everyone can see this.</p>",
-     paidHtml: "<p>This is the paid section. Only subscribers can see this.</p>",
-     publishDate: <Timestamp: today's date>,
-     status: "published"
-   }
-   ```
-
-### Via Script (optional):
-Create `scripts/seed-data.ts` if you need to add multiple briefs.
-
-## Step 11: Deploy to Firebase App Hosting
-
-```bash
-# Build the application
-npm run build
-
-# Deploy to Firebase
-firebase deploy
-
-# Or deploy only hosting:
-firebase deploy --only hosting
-```
-
-## Step 12: Configure Custom Domain
-
-1. Go to Firebase Console → Hosting
-2. Click "Add custom domain"
-3. Enter: `slowbrief.com`
-4. Follow instructions to:
-   - Add DNS A records
-   - Verify domain ownership
-   - Wait for SSL certificate provisioning (can take 24 hours)
-
-## Step 13: Test Production Deployment
-
-### Paywall Integrity Test:
-1. Open Chrome DevTools → Network tab
-2. Navigate to a brief page (not logged in)
-3. Check Firestore requests
-4. **Verify**: `paidHtml` field is NOT present in response
-5. Subscribe with test Stripe card: `4242 4242 4242 4242`
-6. After subscribing, verify `paidHtml` is now visible
-
-### Authentication Test:
-1. Try to subscribe (triggers magic link email)
-2. Check email for magic link
-3. Click link to authenticate
-4. Verify redirect back to site
-
-### Stripe Webhook Test:
-1. Go to Stripe Dashboard → Webhooks
-2. Find your webhook endpoint
-3. Click "Send test webhook"
-4. Select event: `customer.subscription.updated`
-5. Check Firebase logs to verify webhook was received
-6. Check Firestore `users` collection for updated subscription status
-
-## Troubleshooting
-
-### Build Errors:
-- Ensure all environment variables are set
-- Check Firebase credentials are valid
-- Run `npm run build` to see detailed errors
-
-### Paywall Not Working:
-- Verify Firestore rules are deployed: `firebase deploy --only firestore:rules`
-- Check `lib/briefs.ts` is using Firebase Admin SDK (server-side)
-- Ensure pages use `export const dynamic = 'force-dynamic'`
-
-### Stripe Webhook Not Receiving Events:
-- Verify webhook URL is accessible (not localhost)
-- Check Stripe webhook signing secret is correct
-- View webhook logs in Stripe Dashboard
-- Check Next.js API route logs
-
-### Firebase Admin SDK Errors:
-- Verify service account credentials are correct
-- Ensure private key includes BEGIN/END markers
-- Check Firebase project has Firestore enabled
-
-## Production Checklist
-
-Before going live:
-- [ ] Switch Stripe keys from test to live mode
-- [ ] Update Stripe webhook to use production URL
-- [ ] Set Firebase environment to production
-- [ ] Configure domain SSL certificate
-- [ ] Test all flows with real payment
-- [ ] Set up monitoring and error tracking
-- [ ] Configure email templates for magic links
-- [ ] Test on mobile devices
-- [ ] Verify SEO meta tags
-- [ ] Submit sitemap to Google Search Console
-
-## Maintenance
-
-### Adding New Briefs:
-Use Firebase Console → Firestore → briefs collection:
-- Write brief as HTML
-- Set publishDate to future date
-- Set status to 'published'
-- Brief will appear automatically on publish date
-
-### Monitoring:
-- Firebase Console → Analytics
-- Stripe Dashboard → Payments
-- Check error logs regularly
-
-## Support
-
-For issues:
-- Firebase: https://firebase.google.com/support
-- Stripe: https://support.stripe.com/
-- Next.js: https://nextjs.org/docs
+This guide covers the one-time setup required to get Slow Brief running in production.
 
 ---
 
-**Remember**: Scarcity is the product. One brief per day. Always.
+## Prerequisites
+
+- Node.js 20+
+- Git
+- Firebase account
+- Stripe account
+- Vercel account
+- Domain (slowbrief.com)
+
+---
+
+## 1. Clone Repository
+
+```bash
+git clone https://github.com/ahipster/slow-brief.git
+cd slow-brief
+npm install
+```
+
+---
+
+## 2. Firebase Setup
+
+### 2.1 Create Firebase Project
+
+1. Go to https://console.firebase.google.com
+2. Click "Add project"
+3. Project name: `slow-brief`
+4. Enable Google Analytics: Optional
+5. Click "Create project"
+
+### 2.2 Enable Authentication
+
+1. In Firebase Console → Authentication
+2. Click "Get started"
+3. Click "Email/Password" → Enable "Email link (passwordless sign-in)"
+4. Add authorized domain: `slowbrief.com` (and `localhost` for development)
+5. Save
+
+### 2.3 Create Firestore Database
+
+1. In Firebase Console → Firestore Database
+2. Click "Create database"
+3. Start in **production mode**
+4. Choose location (e.g., `europe-west1` for Europe)
+5. Click "Enable"
+
+### 2.4 Deploy Firestore Rules
+
+```bash
+firebase login
+firebase init
+
+# Select:
+# - Firestore
+# - Use existing project: slow-brief
+# - Accept default firestore.rules
+# - Don't overwrite existing files
+
+firebase deploy --only firestore:rules
+```
+
+### 2.5 Get Firebase Credentials
+
+**Web App Config:**
+1. Firebase Console → Project Settings → General
+2. Scroll to "Your apps"
+3. Click web icon (</>) → "Add app"
+4. App nickname: "Slow Brief Web"
+5. Click "Register app"
+6. Copy the config values
+
+**Admin SDK:**
+1. Firebase Console → Project Settings → Service Accounts
+2. Click "Generate new private key"
+3. Download JSON file
+4. Extract values for environment variables
+
+---
+
+## 3. Stripe Setup
+
+### 3.1 Create Stripe Account
+
+1. Go to https://stripe.com
+2. Sign up for account
+3. Complete business verification
+
+### 3.2 Create Subscription Products
+
+**Monthly Subscription:**
+1. Stripe Dashboard → Products → "+ Add product"
+2. Name: "Slow Brief Monthly"
+3. Description: "Monthly subscription to Slow Brief"
+4. Pricing: €5.00 / month (recurring)
+5. Save → Copy the Price ID (starts with `price_`)
+
+**Annual Subscription:**
+1. Stripe Dashboard → Products → "+ Add product"
+2. Name: "Slow Brief Annual"
+3. Description: "Annual subscription to Slow Brief"
+4. Pricing: €50.00 / year (recurring)
+5. Save → Copy the Price ID (starts with `price_`)
+
+### 3.3 Get API Keys
+
+1. Stripe Dashboard → Developers → API keys
+2. Copy "Publishable key" (starts with `pk_live_`)
+3. Click "Reveal" on "Secret key" (starts with `sk_live_`)
+4. Save both keys securely
+
+---
+
+## 4. Vercel Setup
+
+### 4.1 Create Vercel Account
+
+1. Go to https://vercel.com
+2. Sign up with GitHub
+3. Connect your GitHub account
+
+### 4.2 Initial Deployment
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy (will prompt for login)
+vercel --prod
+```
+
+Follow prompts:
+- Set up and deploy? → **Y**
+- Which scope? → Choose your account
+- Link to existing project? → **N**
+- Project name? → **slow-brief**
+- In which directory? → **./**
+- Override settings? → **N**
+
+Save the deployment URL (e.g., `https://slow-brief.vercel.app`)
+
+### 4.3 Add Environment Variables
+
+Go to Vercel Dashboard → slow-brief → Settings → Environment Variables
+
+Add each variable (select "Production" environment):
+
+```bash
+# Firebase Client (Public)
+NEXT_PUBLIC_FIREBASE_API_KEY=<from Firebase config>
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=slow-brief.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=slow-brief
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=<from Firebase config>
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=<from Firebase config>
+NEXT_PUBLIC_FIREBASE_APP_ID=<from Firebase config>
+
+# Firebase Server (Secret)
+FIREBASE_PROJECT_ID=slow-brief
+FIREBASE_CLIENT_EMAIL=<from service account JSON>
+FIREBASE_PRIVATE_KEY="<from service account JSON - include quotes and \n>"
+
+# Stripe Production
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_MONTHLY_PRICE_ID=price_...
+STRIPE_ANNUAL_PRICE_ID=price_...
+STRIPE_WEBHOOK_SECRET=<leave empty for now>
+
+# Base URL
+NEXT_PUBLIC_BASE_URL=https://slowbrief.com
+```
+
+Redeploy: `vercel --prod`
+
+---
+
+## 5. Configure Stripe Webhook
+
+1. Stripe Dashboard → Developers → Webhooks → "+ Add endpoint"
+2. Endpoint URL: `https://slowbrief.com/api/webhook/stripe`
+3. Select events:
+   - `checkout.session.completed`
+   - `customer.subscription.created`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+4. Click "Add endpoint"
+5. Copy webhook secret (starts with `whsec_`)
+6. Add to Vercel: Settings → Environment Variables → `STRIPE_WEBHOOK_SECRET`
+7. Redeploy: `vercel --prod`
+
+---
+
+## 6. Custom Domain Setup
+
+1. Vercel Dashboard → slow-brief → Settings → Domains → Add: `slowbrief.com`
+2. Configure DNS at domain registrar:
+   ```
+   A     @    76.76.21.21
+   CNAME www  cname.vercel-dns.com
+   ```
+3. Wait for DNS propagation (10 min - 48 hours)
+4. Vercel auto-provisions SSL certificate
+
+---
+
+## 7. Production Testing
+
+Test checklist:
+- [ ] Visit https://slowbrief.com
+- [ ] Login with magic link works
+- [ ] Paywall shows for non-subscribers
+- [ ] Subscribe → Stripe checkout works
+- [ ] Payment processes successfully
+- [ ] Webhook updates subscription status
+- [ ] Full content visible after subscription
+- [ ] Account page accessible
+- [ ] Stripe Customer Portal works
+
+---
+
+**Setup complete! Your Slow Brief platform is now live.** 🎉
