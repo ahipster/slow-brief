@@ -15,11 +15,6 @@ export default async function ArchivePage() {
 
   return (
     <PageLayout>
-      <h1>Archive</h1>
-      <p style={{ marginBottom: '2rem', color: '#666' }}>
-        All briefs, in reverse chronological order.
-      </p>
-
       {briefs.length > 0 ? (
         <ul style={{ listStyle: 'none' }}>
           {briefs.map((brief) => (

@@ -15,6 +15,7 @@ export default function Brief({ brief }: BriefProps) {
         dangerouslySetInnerHTML={{ __html: brief.freeHtml }}
       />
 
+      <div className="section-divider">Subscriber section</div>
       {brief.paidHtml ? (
         <div
           className="paid-section"

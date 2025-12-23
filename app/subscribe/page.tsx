@@ -10,6 +10,7 @@ export default function SubscribePage() {
   const [loading, setLoading] = useState<string | null>(null);
   const [hasSubscription, setHasSubscription] = useState(false);
   const [checkingSubscription, setCheckingSubscription] = useState(true);
+  const [portalLoading, setPortalLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -59,86 +60,111 @@ export default function SubscribePage() {
       setLoading(null);
     }
   };
+
+  const handleManageSubscription = async () => {
+    setPortalLoading(true);
+    try {
+      const response = await fetch('/api/customer-portal', {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(`Error: ${data.error || 'Failed to open customer portal'}`);
+        setPortalLoading(false);
+      }
+    } catch (error) {
+      console.error('Failed to open customer portal:', error);
+      alert('Failed to open customer portal. Please try again.');
+      setPortalLoading(false);
+    }
+  };
   return (
     <PageLayout>
-        <h1>Subscribe</h1>
+      <h1>Subscribe</h1>
 
-        <section style={{ marginBottom: '3rem' }}>
-          <p style={{ fontSize: '1.1rem', marginBottom: '2rem' }}>
-            One brief per day. Deeper context, deliberate judgment, calm clarity.
-          </p>
+      <section style={{ marginBottom: '3rem' }}>
+        <p style={{ fontSize: '1.1rem', marginBottom: '2rem' }}>
+          One brief per day. Deeper context, deliberate judgment, calm clarity.
+        </p>
 
-          {!authLoading && !checkingSubscription && user && hasSubscription && (
-            <div style={{
-              maxWidth: '500px',
-              margin: '0 auto 2rem',
-              padding: '1.5rem',
-              background: '#f0fdf4',
-              border: '1px solid #86efac',
-              borderRadius: '8px',
-              textAlign: 'center',
-            }}>
-              <p style={{ marginBottom: '1rem', color: '#16a34a', fontWeight: 500 }}>
-                ✓ You're already subscribed!
-              </p>
-              <p style={{ fontSize: '0.9rem', marginBottom: '1rem', color: '#666' }}>
-                You have full access to all briefs.
-              </p>
-              <Link
-                href="/account"
-                style={{
-                  display: 'inline-block',
-                  padding: '0.75rem 1.5rem',
-                  background: '#222',
-                  color: '#fff',
-                  textDecoration: 'none',
-                  borderRadius: '4px',
-                }}
-              >
-                Manage Subscription
-              </Link>
-            </div>
-          )}
+        {!authLoading && !checkingSubscription && user && hasSubscription && (
+          <div style={{
+            maxWidth: '520px',
+            margin: '0 auto 2rem',
+            padding: '1.75rem',
+            background: '#f8fafc',
+            border: '1px solid #e5e7eb',
+            borderRadius: '8px',
+          }}>
+            <p style={{ marginBottom: '0.75rem', color: '#16a34a', fontWeight: 500 }}>
+              ✓ Active subscriber
+            </p>
+            <p style={{ fontSize: '0.9rem', marginBottom: '1rem', color: '#666' }}>
+              Signed in as {user.email}
+            </p>
+            <button
+              onClick={handleManageSubscription}
+              disabled={portalLoading}
+              style={{
+                display: 'inline-block',
+                padding: '0.75rem 1.5rem',
+                background: '#222',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                fontSize: '0.95rem',
+                cursor: portalLoading ? 'not-allowed' : 'pointer',
+                opacity: portalLoading ? 0.6 : 1,
+              }}
+            >
+              {portalLoading ? 'Loading...' : 'Manage Subscription'}
+            </button>
+            <p style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.75rem' }}>
+              Update billing, payment methods, or cancel.
+            </p>
+          </div>
+        )}
 
-          {!authLoading && !user && (
-            <div style={{
-              maxWidth: '500px',
-              margin: '0 auto 2rem',
-              padding: '1.5rem',
-              background: '#fffbf0',
-              border: '1px solid #ffd966',
-              borderRadius: '8px',
-              textAlign: 'center',
-            }}>
-              <p style={{ marginBottom: '1rem' }}>
-                <strong>Please log in first</strong>
-              </p>
-              <p style={{ fontSize: '0.9rem', marginBottom: '1rem', color: '#666' }}>
-                You need to be logged in to subscribe
-              </p>
-              <Link
-                href="/login"
-                style={{
-                  display: 'inline-block',
-                  padding: '0.75rem 1.5rem',
-                  background: '#222',
-                  color: '#fff',
-                  textDecoration: 'none',
-                  borderRadius: '4px',
-                }}
-              >
-                Log In
-              </Link>
-            </div>
-          )}
+        {!authLoading && !user && (
+          <div style={{
+            maxWidth: '520px',
+            margin: '0 auto 2rem',
+            padding: '1.5rem',
+            background: '#fffbf0',
+            border: '1px solid #ffd966',
+            borderRadius: '8px',
+            textAlign: 'center',
+          }}>
+            <p style={{ marginBottom: '1rem' }}>
+              <strong>Please log in first</strong>
+            </p>
+            <p style={{ fontSize: '0.9rem', marginBottom: '1rem', color: '#666' }}>
+              You need to be logged in to subscribe
+            </p>
+            <Link
+              href="/login"
+              style={{
+                display: 'inline-block',
+                padding: '0.75rem 1.5rem',
+                background: '#222',
+                color: '#fff',
+                textDecoration: 'none',
+                borderRadius: '4px',
+              }}
+            >
+              Log In
+            </Link>
+          </div>
+        )}
 
-          {!hasSubscription && (
-            <div style={{
-              display: 'grid',
-              gap: '1.5rem',
-              maxWidth: '500px',
-              margin: '0 auto 2rem'
-            }}>
+        {!hasSubscription && (
+          <>
+            <div className="section-divider">Plans</div>
+            <div className="plan-grid">
               <div style={{
                 border: '1px solid #ddd',
                 padding: '2rem',
@@ -207,12 +233,13 @@ export default function SubscribePage() {
                 </button>
               </div>
             </div>
-          )}
+          </>
+        )}
 
-          <div style={{ textAlign: 'center', color: '#666', fontSize: '0.9rem' }}>
-            <p>One plan. No tiers. No trials.</p>
-          </div>
-        </section>
+        <div style={{ textAlign: 'center', color: '#666', fontSize: '0.9rem' }}>
+          <p>One plan. No tiers. No trials.</p>
+        </div>
+      </section>
     </PageLayout>
   );
 }
