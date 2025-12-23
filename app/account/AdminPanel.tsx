@@ -8,7 +8,12 @@ import {
   updateCandidate,
   updatePublishedBrief,
 } from './actions';
-import type { CandidateRecord, CandidateSection, PublishedBriefRecord } from './types';
+import type {
+  CandidateInput,
+  CandidateRecord,
+  CandidateSection,
+  PublishedBriefRecord,
+} from './types';
 
 const MAX_FREE_WORDS = 200;
 
@@ -219,7 +224,7 @@ export function AdminPanel({ initialCandidates, initialPublished }: AdminPanelPr
       return;
     }
 
-    const parsedCandidates = [];
+    const parsedCandidates: CandidateInput[] = [];
     const errors: string[] = [];
 
     rows.slice(1).forEach((row, index) => {

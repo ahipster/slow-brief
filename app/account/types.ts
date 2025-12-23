@@ -3,6 +3,16 @@ export interface CandidateSection {
   subsections: string[];
 }
 
+export interface CandidateInput {
+  slug: string;
+  headline: string;
+  freeHtml: string;
+  paidHtml: string;
+  toc: string[];
+  sections: CandidateSection[];
+  publishDate: string | null;
+}
+
 export interface CandidateRecord {
   id: string;
   slug: string;

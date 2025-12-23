@@ -4,17 +4,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 import { revalidatePath } from 'next/cache';
 import { adminDb } from '@/lib/firebase-admin';
 import { getCurrentUser, getUserRole } from '@/lib/auth';
-import { CandidateSection } from './types';
-
-interface CandidateInput {
-  slug: string;
-  headline: string;
-  freeHtml: string;
-  paidHtml: string;
-  toc: string[];
-  sections: CandidateSection[];
-  publishDate: string | null;
-}
+import { CandidateInput, CandidateSection } from './types';
 
 function countWords(text: string) {
   return text.trim().split(/\s+/).filter(Boolean).length;
